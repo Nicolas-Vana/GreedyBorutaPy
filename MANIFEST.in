@@ -1,6 +1,7 @@
 # Include the license file
 include LICENSE
+include README.md
 
 # Include the data files
-include boruta/examples/test_X.csv
-include boruta/examples/test_y.csv
+include greedy_borutaboruta/examples/test_X.csv
+include greedy_boruta/examples/test_y.csv
