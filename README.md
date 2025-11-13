@@ -1,25 +1,25 @@
-# GreedyBoruta #
+# GreedyBoruta
 
 [![License](https://img.shields.io/github/license/Nicolas-Vana/GreedyBorutaPy)](https://github.com/Nicolas-Vana/GreedyBorutaPy/blob/master/LICENSE)
 [![PyPI version](https://badge.fury.io/py/GreedyBoruta.svg)](https://badge.fury.io/py/GreedyBoruta)
 ![Test Coverage](./coverage.svg)
 
-A faster variant of the [Boruta all-relevant feature selection method](https://www.jstatsoft.org/article/view/v036i11) with **greedy feature confirmation** that achieves **5-40× speedups** through a confirmation criterion relaxation.
+A faster variant of the [Boruta all-relevant feature selection method](https://www.jstatsoft.org/article/view/v036i11) with **greedy feature confirmation** that achieves **5-40x speedups** through a confirmation criterion relaxation.
 
 This implementation is a fork of [boruta_py](https://github.com/scikit-learn-contrib/boruta_py), with modifications focused on improving computational efficiency while maintaining statistical rigor.
 
-**📄 [Read the full article explaining the algorithm and experimental results](LINK_TO_BE_ADDED)**
+**[Read the full article explaining the algorithm and experimental results](LINK_TO_BE_ADDED)**
 
-## Key Innovation: Greedy Confirmation
+## Greedy Confirmation
 
 Unlike the original Boruta algorithm which requires features to achieve statistical significance through binomial testing before confirmation, **GreedyBoruta confirms any feature that beats the maximum shadow importance at least once**. This simple change leads to:
 
-- **5-40× faster convergence** on tested datasets
+- **5-40x faster convergence** on tested datasets
 - **Automatic determination of max_iter** based on alpha (no manual tuning needed)
 - **Equal or higher recall** compared to standard Boruta (provably cannot miss relevant features that are identified by the vanilla algorithm)
-- **Guaranteed convergence** in O(-log α) iterations
+- **Guaranteed convergence** in O(-log alpha) iterations
 
-The algorithm automatically calculates the minimum iterations needed for a feature with zero hits to be rejected as ⌈log₂(1/α)⌉, then runs until all features are confirmed or rejected (which occurs at or before this limit).
+The algorithm automatically calculates the minimum iterations needed for a feature with zero hits to be rejected as log2(1/alpha), then runs until all features are confirmed or rejected (which occurs at or before this limit).
 
 ## How to Install
 
@@ -100,23 +100,23 @@ This philosophy justifies the greedy confirmation criterion: in all-relevant sel
 
 ### Automatic max_iter Calculation
 
-Because all tentative features have exactly zero hits (confirmed features had at least one), the binomial test for rejection simplifies dramatically. The algorithm computes the minimum iterations needed for a feature with zero hits to be rejected at significance level α:
+Because all tentative features have exactly zero hits (confirmed features had at least one), the binomial test for rejection simplifies dramatically. The algorithm computes the minimum iterations needed for a feature with zero hits to be rejected at significance level alpha:
 
-For a binomial test with p₀ = 0.5 and x = 0 hits:
+For a binomial test with p_0 = 0.5 and x = 0 hits:
 ```
-p-value = (1/2)^n < α
+p-value = (1/2)^n < alpha
 ```
 
-Therefore: **max_iter = O(log₂(1/α))**
+Therefore: **max_iter = O(log2(1/alpha))**
 
 This means that all features will be sorted into confirmed or rejected in at most max_iter iterations - at this iteration, all remaining tentative features (with zero hits) are automatically rejected, and all features with hits > 0 are confirmed. No statistical testing is required during intermediate iterations.
 
 **With FDR correction applied (as in boruta_py), max_iter values are:**
-- α = 0.10: ~6 iterations
-- α = 0.01: ~10 iterations  
-- α = 0.001: ~14 iterations
-- α = 0.0001: ~18 iterations
-- α = 0.00001: ~22 iterations
+- alpha = 0.10: ~6 iterations
+- alpha = 0.01: ~10 iterations  
+- alpha = 0.001: ~14 iterations
+- alpha = 0.0001: ~18 iterations
+- alpha = 0.00001: ~22 iterations
 
 No manual tuning of max_iter is required!
 
@@ -152,7 +152,7 @@ We highly recommend using pruned trees with depth between 3-7, as suggested in t
 
 **alpha** : float, default = 0.05
    > Significance level for the corrected p-values in both correction steps.
-   > Also automatically determines max_iter via the formula: ⌈log₂(1/α)⌉
+   > Also automatically determines max_iter via the formula: log2(1/alpha)
    > Lower alpha = more conservative selection + more iterations
 
 **two_step** : Boolean, default = True
@@ -197,10 +197,10 @@ This simplification improves usability and eliminates the need for manual tuning
 
 Based on synthetic experiments with known ground truth:
 
-- **5-15× speedup** on challenging datasets with proper early stopping in vanilla Boruta
-- **Up to 40× speedup** when vanilla Boruta runs without early stopping to full convergence
+- **5-15x speedup** on challenging datasets with proper early stopping in vanilla Boruta
+- **Up to 40x speedup** when vanilla Boruta runs without early stopping to full convergence
 - **Equal or higher recall** (never misses features that vanilla Boruta would find relevant)
-- **Slightly lower specificity** (typically 2-6 additional features selected on 500-feature datasets)
+- **Slightly lower specificity** (<10 features selected on 500-feature datasets tested)
 - **Guaranteed convergence** - all features are always classified (no tentative features remain)
 
 ## When to Use GreedyBoruta
