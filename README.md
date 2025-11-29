@@ -98,7 +98,7 @@ This philosophy justifies the greedy confirmation criterion: in all-relevant sel
 3. **Dramatically speeds up and parallelization**: Greedy Boruta runs at most $K$ iterations, which is the same number of iterations at which the vanilla Boruta confirms or rejects its "first batch" of features. Unlike the vanilla Boruta, however, Greedy Boruta can be parallelize as $K$ is known since it exclusively depends on the significance level $\alpha$.
 4. **Trades slight specificity for speed**: the reduction in specificity by the relaxation of the confirmation criterion is relatively small when compared to the speed gains.
 
-### Automatic `max_iter` Calculation
+### Automatic `max_iter` calculation
 
 Because all tentative features have exactly zero hits (since confirmed features have at least one), the binomial test for rejection is nicely simplified. The algorithm computes the minimum number of iterations needed for a feature with zero hits to be rejected at significance level $\alpha$.
 
@@ -234,7 +234,7 @@ If you use Greedy Boruta in your research, please cite the Greedy Boruta paper a
 
 ```
 @article{greedyboruta2025,
-  title={The Greedy Boruta Algorithm: Faster Feature Selection Without SacrificingRecall},
+  title={The Greedy Boruta Algorithm: Faster Feature Selection Without Sacrificing Recall},
   author={BLA BLA BLA},
   journal={BLA BLA},
   volume={XXX},
