@@ -6,20 +6,20 @@
 
 A faster variant of the [Boruta all-relevant feature selection method](https://www.jstatsoft.org/article/view/v036i11) with **greedy feature confirmation** that achieves **5-40x speedups** through a confirmation criterion relaxation.
 
-This implementation is a fork of [boruta_py](https://github.com/scikit-learn-contrib/boruta_py), with modifications focused on improving computational efficiency while maintaining statistical rigor.
+This implementation is a fork of [boruta_py](https://github.com/scikit-learn-contrib/boruta_py), with modifications focused on **improving computational efficiency while maintaining statistical rigor**.
 
 **[Read the full article explaining the algorithm and experimental results](LINK_TO_BE_ADDED)**
 
 ## Greedy Confirmation
 
-Unlike the original Boruta algorithm which requires features to achieve statistical significance through binomial testing before confirmation, **GreedyBoruta confirms any feature that beats the maximum shadow importance at least once**. This simple change leads to:
+Unlike the vanilla Boruta algorithm, which requires features to achieve statistical significance through binomial testing before confirmation, **GreedyBoruta confirms any feature that beats the maximum shadow importance at least once**. This simple change leads to:
 
-- **5-40x faster convergence** on tested datasets
-- **Automatic determination of max_iter** based on alpha (no manual tuning needed)
-- **Equal or higher recall** compared to standard Boruta (provably cannot miss relevant features that are identified by the vanilla algorithm)
-- **Guaranteed convergence** in O(-log alpha) iterations
+- **5-40x faster convergence** on tested datasets.
+- **Automatic determination of max_iter** based on the significance level $\alpha$. In practice, no manual tuning is needed.
+- **Equal or higher recall** compared to vanilla Boruta. We prove that GreedyBoruta does not miss relevant features that are identified by its vanilla counterpart.
+- **Guaranteed convergence** in $O(-log \alpha)$ iterations
 
-The algorithm automatically calculates the minimum iterations needed for a feature with zero hits to be rejected as log2(1/alpha), then runs until all features are confirmed or rejected (which occurs at or before this limit).
+The algorithm automatically calculates the minimum iterations needed for a feature with zero hits to be rejected as $log_2(1/\alpha)$, then runs until all features are confirmed or rejected (which occurs at or before this limit).
 
 ## How to Install
 
@@ -75,52 +75,51 @@ feat_selector.ranking_
 X_filtered = feat_selector.transform(X)
 ```
 
-## Philosophy: All-Relevant vs Minimal-Optimal
+## Philosophy: All-relevant vs minimal-optimal
 
 GreedyBoruta, like the vanilla Boruta, follows the **all-relevant** feature selection philosophy. This means it aims to find **every feature that carries useful information**, not just the smallest set that achieves good prediction.
 
 **Why this matters:**
-- When you want to **understand a phenomenon** (not just predict it), you need all contributing factors
-- In **scientific discovery** and **causal inference**, missing a relevant feature can lead to incorrect conclusions
-- **Redundant features** (correlated with informative ones) are intentionally retained - they carry signal even if not strictly necessary
-- Downstream **minimal-optimal methods** (RFE, LASSO, mRMR) can further reduce the feature set if needed
+- When you want to **understand a phenomenon** (not just predict it), you need all contributing factors.
+- In **scientific discovery** and **causal inference**, missing a relevant feature can lead to incorrect conclusions.
+- **Redundant features** (correlated with informative ones) are intentionally retained - they carry signal even if not strictly necessary.
+- Downstream **minimal-optimal methods** (RFE, LASSO, mRMR) can further reduce the feature set if needed.
 
-This philosophy justifies the greedy confirmation criterion: in all-relevant selection, **false negatives (missing relevant features) are more costly than false positives (including a few extra features)**. The relaxed criterion prioritizes high recall, which aligns perfectly with the all-relevant goal.
+This philosophy justifies the greedy confirmation criterion: in all-relevant selection, **false negatives (missing relevant features) are more costly than false positives (including a few extra irrelevant features)**. The relaxed criterion prioritizes high recall, which aligns perfectly with the all-relevant paradigm.
 
-## What's Different from Vanilla Boruta?
+## What's different from vanilla Boruta?
 
-### Core Algorithm Change
+### Core algorithm change
 
-**Greedy Confirmation Criterion**: Features are confirmed immediately upon achieving **at least one hit** (beating the maximum shadow importance in any iteration) rather than requiring statistical significance through binomial testing. The rejection criterion remains unchanged. This change:
+**Greedy confirmation criterion**: features are confirmed immediately upon achieving **at least one hit** (beating the maximum shadow importance in any iteration) rather than requiring statistical significance through binomial testing. The rejection criterion remains unchanged. In practice, this change:
 
-1. **Maintains or improves recall** - any feature confirmed by vanilla Boruta will also be confirmed by Greedy Boruta (since statistical significance requires at least one hit)
-2. **Enables guaranteed convergence** - all tentative features have exactly zero hits, simplifying the rejection test
-3. **Dramatically speeds up the process** - GreedyBoruta runs at most K iterations, which is the same number of iterations at which point the vanilla boruta confirms or rejects its "first batch" of features.
-4. **Trades slight specificity for speed** - the reduce in specificity seen by the relaxation of the confirmation criterion is relatively small when compared to the speed gains.
+1. **Maintains or improves recall**: any feature confirmed by vanilla Boruta will also be confirmed by Greedy Boruta (since statistical significance requires at least one hit).
+2. **Enables guaranteed convergence**: until the last iteration, all tentative features have exactly zero hits, simplifying the rejection test.
+3. **Dramatically speeds up and parallelization**: GreedyBoruta runs at most $K$ iterations, which is the same number of iterations at which the vanilla Boruta confirms or rejects its "first batch" of features. Unlike the vanilla Boruta, however, GreedyBoruta can be parallelize as $K$ is known since it exclusively depends on the significance level $\alpha$.
+4. **Trades slight specificity for speed**: the reduction in specificity by the relaxation of the confirmation criterion is relatively small when compared to the speed gains.
 
 ### Automatic max_iter Calculation
 
-Because all tentative features have exactly zero hits (confirmed features had at least one), the binomial test for rejection simplifies dramatically. The algorithm computes the minimum iterations needed for a feature with zero hits to be rejected at significance level alpha:
+Because all tentative features have exactly zero hits (since confirmed features have at least one), the binomial test for rejection is nicely simplified. The algorithm computes the minimum number of iterations needed for a feature with zero hits to be rejected at significance level $\alpha$.
 
-For a binomial test with p_0 = 0.5 and x = 0 hits:
+For a binomial test with p_0 = 0.5 and x = 0 hits,
 ```
-p-value = (1/2)^n < alpha
+p-value = (1/2)^n < alpha.
 ```
-
-Therefore: **max_iter = O(log2(1/alpha))**
+Therefore, **max_iter = $O(log_2(1/\alpha))$**.
 
 This means that all features will be sorted into confirmed or rejected in at most max_iter iterations - at this iteration, all remaining tentative features (with zero hits) are automatically rejected, and all features with hits > 0 are confirmed. No statistical testing is required during intermediate iterations.
 
-**With FDR correction applied (as in boruta_py), max_iter values are:**
-- alpha = 0.10: ~6 iterations
-- alpha = 0.01: ~10 iterations  
-- alpha = 0.001: ~14 iterations
-- alpha = 0.0001: ~18 iterations
-- alpha = 0.00001: ~22 iterations
+**With False discovery rate (FDR) correction applied (as in boruta_py), max_iter values are:**
+- $\alpha = 0.10$: ~6 iterations
+- $\alpha = 0.01$: ~10 iterations  
+- $\alpha = 0.001$: ~14 iterations
+- $\alpha = 0.0001$: ~18 iterations
+- $\alpha = 0.0001$: ~22 iterations
 
-No manual tuning of max_iter is required!
+**Notice that given a significance level, no manual tuning of max_iter is required!**
 
-## What's Inherited from boruta_py?
+## What's inherited from boruta_py?
 
 This implementation builds upon the excellent work in boruta_py and retains all its key improvements over the original R implementation:
 
@@ -152,8 +151,8 @@ We highly recommend using pruned trees with depth between 3-7, as suggested in t
 
 **alpha** : float, default = 0.05
    > Significance level for the corrected p-values in both correction steps.
-   > Also automatically determines max_iter via the formula: log2(1/alpha)
-   > Lower alpha = more conservative selection + more iterations
+   > Also automatically determines max_iter via the formula: log_2(1/alpha).
+   > Lower alpha = more conservative selection = more iterations.
 
 **two_step** : Boolean, default = True
    > If True, uses FDR + Bonferroni correction. If False, uses only
@@ -166,12 +165,12 @@ We highly recommend using pruned trees with depth between 3-7, as suggested in t
    > Controls verbosity of output:
    > 0 = silent, 1 = iteration counter, 2 = detailed statistics per iteration
 
-### Removed Parameters
+### Removed parameters
 
-Unlike vanilla Boruta implementations, GreedyBoruta does **not** require:
-- **max_iter**: Automatically calculated from alpha
-- **early_stopping**: Not needed due to guaranteed convergence  
-- **n_iter_no_change**: Not needed due to guaranteed convergence
+Unlike the vanilla Boruta implementation, GreedyBoruta does **not** require:
+- **max_iter**: Automatically calculated from **alpha**.
+- **early_stopping**: Not needed due to guaranteed convergence.
+- **n_iter_no_change**: Not needed due to guaranteed convergence.
 
 This simplification improves usability and eliminates the need for manual tuning of convergence-related parameters.
 
@@ -193,35 +192,35 @@ This simplification improves usability and eliminates the need for manual tuning
 **importance_history_** : array of shape [n_iterations, n_features]
    > Historical record of feature importances across all iterations.
 
-## Performance Comparison
+## Performance comparison: GreedyBoruta vs vanilla Boruta
 
-Based on synthetic experiments with known ground truth:
+Based on synthetic experiments with known ground truth, we observed
 
-- **5-15x speedup** on challenging datasets with proper early stopping in vanilla Boruta
-- **Up to 40x speedup** when vanilla Boruta runs without early stopping to full convergence
-- **Equal or higher recall** (never misses features that vanilla Boruta would find relevant)
-- **Slightly lower specificity** (<10 features selected on 500-feature datasets tested)
-- **Guaranteed convergence** - all features are always classified (no tentative features remain)
+- **5-15x speedup** on challenging datasets with proper early stopping for vanilla Boruta.
+- **Up to 40x speedup** when vanilla Boruta runs without early stopping to full convergence.
+- **Equal or higher recall**, as GreedyBoruta _never_ misses features that the vanilla Boruta would find relevant.
+- **Slightly lower specificity**: $<10$ features selected on 500-feature datasets tested).
+- **Guaranteed convergence**: all features are always classified (no tentative features remain).
 
-## When to Use GreedyBoruta
+## When to use GreedyBoruta
 
 **Use GreedyBoruta when:**
-- You want **all-relevant feature selection** with high recall
-- You're working with **high-dimensional data** for which the vanilla boruta takes too long to run
-- **Computational efficiency matters** (exploratory analysis, rapid prototyping, iterative workflows)
-- False positives can be filtered in **downstream pipelines** (regularization, cross-validation, minimal-optimal selection)
-- You want to avoid manually tuning max_iter or early stopping parameters
+- You want **all-relevant feature selection** with high recall.
+- You're working with **high-dimensional data** for which the vanilla Boruta takes too long to run/converge.
+- **Computational efficiency matters**.
+- False positives can be filtered in **downstream pipelines** using regularization, cross-validation, minimal-optimal selection.
+- You want to avoid manually tuning max_iter or early stopping parameters.
 
 **Consider standard Boruta when:**
-- You need **maximum specificity** and false positives are very costly
-- Your dataset is **small enough** that speed isn't a concern
-- **Statistical conservatism** is paramount for your application
-
+- You need **maximum specificity** and false positives are very costly.
+- Your dataset is **small enough** that speed isn't a concern.
+- **Statistical conservatism** is paramount for your application.
 
 ## References
 
-1. Kursa M., Rudnicki W., "Feature Selection with the Boruta Package" Journal of Statistical Software, Vol. 36, Issue 11, Sep 2010
-2. Homola D., "BorutaPy: An all-relevant feature selection method" https://github.com/scikit-learn-contrib/boruta_py
+1. COLOCAR REFERENCIA DO GREDDY BORUTA AQUI!
+2. Kursa M., Rudnicki W., "Feature Selection with the Boruta Package" Journal of Statistical Software, Vol. 36, Issue 11, Sep 2010
+3. Homola D., "BorutaPy: An all-relevant feature selection method" https://github.com/scikit-learn-contrib/boruta_py
 
 ## Credits
 
@@ -231,7 +230,7 @@ The greedy confirmation criterion and automatic convergence calculation are nove
 
 ## Citation
 
-If you use GreedyBoruta in your research, please cite both the original Boruta paper and the boruta_py implementation:
+If you use GreedyBoruta in your research, please cite the GreddyBoruta paper and both the original Boruta paper and the boruta_py implementation:
 
 ```
 @article{kursa2010feature,
@@ -242,6 +241,18 @@ If you use GreedyBoruta in your research, please cite both the original Boruta p
   number={11},
   pages={1--13},
   year={2010}
+}
+```
+
+```
+@article{greedyboruta2025,
+  title={The Greedy Boruta Algorithm: Faster Feature Selection Without SacrificingRecall},
+  author={BLA BLA BLA},
+  journal={BLA BLA},
+  volume={XXX},
+  number={XXX},
+  pages={XXX},
+  year={XXX}
 }
 ```
 
