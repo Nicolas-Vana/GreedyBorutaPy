@@ -17,7 +17,7 @@ Unlike the vanilla Boruta algorithm, which requires features to achieve statisti
 - **5-40x faster convergence** on tested datasets.
 - **Automatic determination of `max_iter`** based on the significance level $\alpha$. In practice, no manual tuning is needed.
 - **Equal or higher recall** compared to vanilla Boruta. We prove that Greedy Boruta does not miss relevant features that are identified by its vanilla counterpart.
-- **Guaranteed convergence** in $O(-log \alpha)$ iterations
+- **Guaranteed convergence** in $O(-log_2 \alpha)$ iterations
 
 The algorithm automatically calculates the minimum iterations needed for a feature with zero hits to be rejected as $log_2(1/\alpha)$, then runs until all features are confirmed or rejected (which occurs at or before this limit).
 
