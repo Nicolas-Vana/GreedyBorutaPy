@@ -48,7 +48,7 @@ The interface is identical to scikit-learn and boruta_py:
 ```python
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
-from greedyboruta import GreedyBorutaPy
+from greedy_boruta import GreedyBorutaPy
 
 # load X and y
 X = pd.read_csv('examples/test_X.csv', index_col=0).values
@@ -216,7 +216,6 @@ Based on synthetic experiments with known ground truth:
 - You need **maximum specificity** and false positives are very costly
 - Your dataset is **small enough** that speed isn't a concern
 - **Statistical conservatism** is paramount for your application
-
 
 ## References
 
