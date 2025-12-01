@@ -218,7 +218,7 @@ Based on synthetic experiments with known ground truth, we observed
 
 ## References
 
-1. COLOCAR REFERENCIA DO GREEDY BORUTA AQUI!
+1. Vana N., ["The Greedy Boruta Algorithm: Faster Feature Selection Without Sacrificing Recall"](https://towardsdatascience.com/the-greedy-boruta-algorithm-faster-feature-selection-without-sacrificing-recall/) Towards Data Science, 2025. 
 2. Kursa M., Rudnicki W., "Feature Selection with the Boruta Package" Journal of Statistical Software, Vol. 36, Issue 11, Sep 2010
 3. Homola D., "BorutaPy: An all-relevant feature selection method" https://github.com/scikit-learn-contrib/boruta_py
 
@@ -233,14 +233,11 @@ The greedy confirmation criterion and automatic convergence calculation are nove
 If you use Greedy Boruta in your research, please cite the Greedy Boruta paper and both the original Boruta paper and the `boruta_py` implementation:
 
 ```
-@article{greedyboruta2025,
-  title={The Greedy Boruta Algorithm: Faster Feature Selection Without Sacrificing Recall},
-  author={BLA BLA BLA},
-  journal={BLA BLA},
-  volume={XXX},
-  number={XXX},
-  pages={XXX},
-  year={XXX}
+@software{greedyboruta2025,
+  title={GreedyBorutaPy: Faster Feature Selection Without Sacrificing Recall},
+  author={Vana, Nicolas and Prado, Estevão},
+  year={2025},
+  url={https://github.com/Nicolas-Vana/GreedyBorutaPy}
 }
 
 @article{kursa2010feature,
@@ -251,6 +248,13 @@ If you use Greedy Boruta in your research, please cite the Greedy Boruta paper a
   number={11},
   pages={1--13},
   year={2010}
+}
+
+@software{borutapy,
+  title={BorutaPy: Python implementation of the Boruta feature selection algorithm},
+  author={Homola, Daniel},
+  year={2016},
+  url={https://github.com/scikit-learn-contrib/boruta_py}
 }
 ```
 
