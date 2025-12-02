@@ -8,7 +8,7 @@ A faster variant of the [Boruta all-relevant feature selection method](https://w
 
 This implementation is a fork of [`boruta_py`](https://github.com/scikit-learn-contrib/boruta_py), with modifications focused on **improving computational efficiency while maintaining statistical rigor**.
 
-**[Read the full article explaining the algorithm and experimental results](LINK_TO_BE_ADDED)**
+**[Read the full article explaining the algorithm and experimental results](https://towardsdatascience.com/the-greedy-boruta-algorithm-faster-feature-selection-without-sacrificing-recall/)**
 
 ## Greedy Confirmation
 
